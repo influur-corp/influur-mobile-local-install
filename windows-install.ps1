@@ -70,16 +70,13 @@ if (-not (Get-Command java -ErrorAction SilentlyContinue)) {
 
 # Install Android SDK & accept licenses
 Write-Host "Accept Android licenses."
-$output = flutter doctor --android-licenses
-if ($output -match "licenses not accepted") {
-  Write-Host "The Android licenses are not accepted. Trying to accept automatically..."
-  flutter doctor --android-licenses -y
-  $output2 = flutter doctor --android-licenses
-
-  if ($output2 -match "licenses not accepted") {
-     Write-Host "Android licenses could not be accepted automatically."
-  } else {
+flutter doctor --android-licenses --suppress-analytics *> $null
+if ($LASTEXITCODE -ne 0) {
+  flutter doctor --android-licenses --suppress-analytics *> $null
+  if ($LASTEXITCODE -eq 0) {
     Write-Host "Android licenses have been accepted."
+  } else {
+    Write-Host "Android licenses could not be accepted automatically."
   }
 } else {
   Write-Host "Android licenses are accepted."

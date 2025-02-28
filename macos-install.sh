@@ -123,10 +123,9 @@ fi
 
 # Install Android SDK & accept licenses
 echo "Accept Android licenses."
-flutter doctor --android-licenses | grep -q "licenses not accepted"
-if [ $? -eq 0 ]; then
-    echo "The Android licenses are not accepted. Trying to accept automatically..."
-    yes | flutter doctor --android-licenses
+flutter doctor --android-licenses --suppress-analytics >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+    flutter doctor --android-licenses --suppress-analytics >/dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo "Android licenses have been accepted."
     else
