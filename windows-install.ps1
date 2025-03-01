@@ -32,7 +32,7 @@ if (!(Test-Path -Path "$env:USERPROFILE\Development\influur\influur-mobile")) {
     cd  "$env:USERPROFILE\Development\influur"
     git clone git@github.com:influur-corp/influur-mobile.git
 } else {
-    git checkout develop && git pull origin develop
+    git checkout develop ; git pull origin develop
 }
 
 # Install Flutter
@@ -85,7 +85,7 @@ if ($LASTEXITCODE -ne 0) {
 # Install project dependencies
 Write-Host "Get project's dependencies."
 cd "$env:USERPROFILE\Development\influur\influur-mobile"
-flutter clean && flutter pub get
+flutter clean ; flutter pub get
 
 # Remove generated file and the .env file
 Remove-Item -Force ".env"
