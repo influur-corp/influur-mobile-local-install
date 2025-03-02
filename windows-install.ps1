@@ -6,7 +6,8 @@ if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
     Set-ExecutionPolicy Bypass -Scope Process -Force
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
     Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-} else {
+}
+else {
     Write-Host "Chocolatey is already installed."
 }
 
@@ -14,7 +15,8 @@ if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Host "Installing Git..."
     choco install git -y
-} else {
+}
+else {
     Write-Host "Git is already installed."
 }
 
@@ -29,9 +31,10 @@ if (!(Test-Path -Path "$env:USERPROFILE\Development\influur\influur-mobile")) {
     Write-Host "Cloning influur-mobile repository..."
     Write-Host "Must type your passphrase to clone the repository..."
     
-    cd  "$env:USERPROFILE\Development\influur"
+    Set-Location  "$env:USERPROFILE\Development\influur"
     git clone git@github.com:influur-corp/influur-mobile.git
-} else {
+}
+else {
     git checkout develop ; git pull origin develop
 }
 
@@ -44,7 +47,8 @@ if (-not (Test-Path "$env:USERPROFILE\Development\flutter")) {
 
     $env:Path += ";$env:USERPROFILE\Development\flutter\bin"
     [System.Environment]::SetEnvironmentVariable("Path", "$env:Path;$env:USERPROFILE\flutter\bin", [System.EnvironmentVariableTarget]::User)
-} else {
+}
+else {
     Write-Host "Flutter is already installed."
 }
 
@@ -56,7 +60,8 @@ flutter doctor
 if (-not (Test-Path "$env:ProgramFiles\Android\Android Studio")) {
     Write-Host "Installing Android Studio..."
     choco install androidstudio -y
-} else {
+}
+else {
     Write-Host "Android Studio is already installed."
 }
 
@@ -64,7 +69,8 @@ if (-not (Test-Path "$env:ProgramFiles\Android\Android Studio")) {
 if (-not (Get-Command java -ErrorAction SilentlyContinue)) {
     Write-Host "Installing Java..."
     choco install jdk8 -y
-} else {
+}
+else {
     Write-Host "Java is already installed."
 }
 
@@ -72,19 +78,21 @@ if (-not (Get-Command java -ErrorAction SilentlyContinue)) {
 Write-Host "Accept Android licenses."
 flutter doctor --android-licenses --suppress-analytics *> $null
 if ($LASTEXITCODE -ne 0) {
-  flutter doctor --android-licenses --suppress-analytics *> $null
-  if ($LASTEXITCODE -eq 0) {
-    Write-Host "Android licenses have been accepted."
-  } else {
-    Write-Host "Android licenses could not be accepted automatically."
-  }
-} else {
-  Write-Host "Android licenses are accepted."
+    flutter doctor --android-licenses --suppress-analytics *> $null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Android licenses have been accepted."
+    }
+    else {
+        Write-Host "Android licenses could not be accepted automatically."
+    }
+}
+else {
+    Write-Host "Android licenses are accepted."
 }
 
 # Install project dependencies
 Write-Host "Get project's dependencies."
-cd "$env:USERPROFILE\Development\influur\influur-mobile"
+Set-Location "$env:USERPROFILE\Development\influur\influur-mobile"
 flutter clean ; flutter pub get
 
 # Remove generated file and the .env file
@@ -92,15 +100,16 @@ Remove-Item -Force ".env"
 Remove-Item -Force -Path "lib\services\environment_manager\environment_manager.g.dart"
 
 # Configure .env file
-$ENV_FILE="$env:USERPROFILE\environmentTemp\.env"
-$TARGET_PATH="$env:USERPROFILE\Development\influur\influur-mobile"
+$ENV_FILE = "$env:USERPROFILE\environmentTemp\.env"
+$TARGET_PATH = "$env:USERPROFILE\Development\influur\influur-mobile"
 if (Test-Path -Path $ENV_FILE -PathType Leaf) {
-  Move-Item -Path $ENV_FILE -Destination $TARGET_PATH
-  Write-Host "File '$ENV_FILE' moved to $TARGET_PATH."
+    Move-Item -Path $ENV_FILE -Destination $TARGET_PATH
+    Write-Host "File '$ENV_FILE' moved to $TARGET_PATH."
 
-  Remove-Item -Force $ENV_FILE
-} else {
-  Write-Host "The file '$ENV_FILE' doesn't exist."
+    Remove-Item -Force $ENV_FILE
+}
+else {
+    Write-Host "The file '$ENV_FILE' doesn't exist."
 }
 
 # Run build_runner commands
