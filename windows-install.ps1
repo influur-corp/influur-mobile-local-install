@@ -40,7 +40,7 @@ else {
 
 # Install Flutter
 if (-not (Test-Path "$env:USERPROFILE\Development\flutter")) {
-    Write-Host "Installing Flutter..."
+    Write-Host "Installing Flutter, this will take time..."
     Invoke-WebRequest -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.3-stable.zip" -OutFile "$env:TEMP\flutter.zip"
     Expand-Archive -Path "$env:TEMP\flutter.zip" -DestinationPath "$env:USERPROFILE\Development\flutter"
     Remove-Item "$env:TEMP\flutter.zip"
@@ -89,6 +89,8 @@ if ($LASTEXITCODE -ne 0) {
 else {
     Write-Host "Android licenses are accepted."
 }
+
+# Install FVM if the version it is not the same
 
 # Install project dependencies
 Write-Host "Get project's dependencies."
