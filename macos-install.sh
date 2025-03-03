@@ -111,25 +111,33 @@ xcrun simctl create "MyCustomSimulator" "iPhone 15" "com.apple.CoreSimulator.Sim
 open -a Simulator
 
 # Install Flutter
-FLUTTER_DIR="$HOME/Development/flutter"
-if [ ! -d "$FLUTTER_DIR" ]; then
-    echo "Installing Flutter, this will take time..."
-    mkdir -p "$FLUTTER_DIR"
-    cd "$FLUTTER_DIR" || exit
-    curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_3.24.3-stable.zip
-    unzip flutter_macos_3.24.3-stable.zip
-    rm flutter_macos_3.24.3-stable.zip
+if ! command -v flutter &>/dev/null; then
+    FLUTTER_DIR="$HOME/Development/flutter"
+    if [ ! -d "$FLUTTER_DIR" ]; then
+        echo "Installing Flutter, this will take time..."
+        mkdir -p "$FLUTTER_DIR"
+        cd "$FLUTTER_DIR" || exit
+        curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_3.24.3-stable.zip
+        unzip flutter_macos_3.24.3-stable.zip
+        rm flutter_macos_3.24.3-stable.zip
+    else
+        echo "Flutter already installed"
+    fi
 else
     echo "Flutter already installed"
 fi
 
 # Add Flutter to PATH
-if ! grep -q 'export PATH=$HOME/Development/flutter/bin:$PATH' ~/.zshrc; then
-    echo "Adding Flutter to PATH..."
-    echo "# Start Flutter Configuration" >>~/.zshrc
-    echo 'export PATH=$HOME/Development/flutter/bin:$PATH' >>~/.zshrc
-    echo "# End Flutter Configuration" >>~/.zshrc
-    source ~/.zshrc
+if ! command -v flutter &>/dev/null; then
+    if ! grep -q 'export PATH=$HOME/Development/flutter/bin:$PATH' ~/.zshrc; then
+        echo "Adding Flutter to PATH..."
+        echo "# Start Flutter Configuration" >>~/.zshrc
+        echo 'export PATH=$HOME/Development/flutter/bin:$PATH' >>~/.zshrc
+        echo "# End Flutter Configuration" >>~/.zshrc
+        source ~/.zshrc
+    else
+        echo "Flutter is already added in PATH"
+    fi
 else
     echo "Flutter is already added in PATH"
 fi
