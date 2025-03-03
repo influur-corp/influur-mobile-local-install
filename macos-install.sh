@@ -10,12 +10,35 @@ else
     echo "Homebrew already installed!!"
 fi
 
-# Install Rosetta
-if arch -x86_64 /usr/bin/true &>/dev/null; then
-    echo "Rosetta already installed!!"
+# Add Homebrew to PATH
+if [[ "$(uname -m)" == "arm64" ]]; then
+    HOMEBREW_PATH="/opt/homebrew/bin"
 else
-    echo "Installing Rosetta..."
-    softwareupdate --install-rosetta --agree-to-license
+    HOMEBREW_PATH="/usr/local/bin"
+fi
+
+if grep -q "$HOMEBREW_PATH" ~/.zshrc; then
+    echo "Homebrew is already added in PATH"
+else
+    echo "# Start Homebrew Configuration" >>~/.zshrc
+    echo "export PATH=\"$HOMEBREW_PATH:\$PATH\"" >>~/.zshrc
+    echo "# End Homebrew Configuration" >>~/.zshrc
+
+    echo "Homebrew added toPATH."
+    source ~/.zshrc
+fi
+
+# Install Rosetta
+if [[ "$(uname -m)" == "arm64" ]]; then
+    echo "The machine uses Apple Sillicon"
+    if arch -x86_64 /usr/bin/true &>/dev/null; then
+        echo "Rosetta already installed!!"
+    else
+        echo "Installing Rosetta..."
+        softwareupdate --install-rosetta --agree-to-license
+    fi
+else
+    echo "The machine uses Intel"
 fi
 
 # Install Git
@@ -90,7 +113,7 @@ open -a Simulator
 # Install Flutter
 FLUTTER_DIR="$HOME/Development/flutter"
 if [ ! -d "$FLUTTER_DIR" ]; then
-    echo "Installing Flutter..."
+    echo "Installing Flutter, this will take time..."
     mkdir -p "$FLUTTER_DIR"
     cd "$FLUTTER_DIR" || exit
     curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_3.24.3-stable.zip
@@ -107,6 +130,8 @@ if ! grep -q 'export PATH=$HOME/Development/flutter/bin:$PATH' ~/.zshrc; then
     echo 'export PATH=$HOME/Development/flutter/bin:$PATH' >>~/.zshrc
     echo "# End Flutter Configuration" >>~/.zshrc
     source ~/.zshrc
+else
+    echo "Flutter is already added in PATH"
 fi
 
 # Verify Flutter installation
@@ -134,6 +159,8 @@ if [ $? -ne 0 ]; then
 else
     echo "Android licenses are accepted."
 fi
+
+# Install FVM if the version it is not the same (WIP)
 
 # Install project dependencies
 echo "Get project's dependencies."
