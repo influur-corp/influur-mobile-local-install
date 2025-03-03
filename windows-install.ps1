@@ -12,17 +12,25 @@ else {
 }
 
 # Add Chocolatey to environment variable PATH
-$chocoPath = "$env:ALLUSERSPROFILE\chocolatey\bin"
-if ($env:Path -notmatch [regex]::Escape($chocoPath)) {
-    $env:Path += ";$chocoPath"
-    [System.Environment]::SetEnvironmentVariable("Path", $env:Path, "Machine")
-
-    Write-Host "Chocolatey added to environment variable PATH."
-    [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
+    $chocoPath = "$env:ALLUSERSPROFILE\chocolatey\bin"
+    if ($env:Path -notmatch [regex]::Escape($chocoPath)) {
+        $env:Path += ";$chocoPath"
+        [System.Environment]::SetEnvironmentVariable("Path", $env:Path, "Machine")
+    
+        Write-Host "Chocolatey added to environment variable PATH."
+        [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+    }
+    else {
+        [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+        Write-Host "Chocolatey already added to environment variable PATH."
+    }
 }
 else {
+    [System.Environment]::GetEnvironmentVariable("Path", "Machine")
     Write-Host "Chocolatey already added to environment variable PATH."
 }
+
 
 # Install Git
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
@@ -52,29 +60,41 @@ else {
 }
 
 # Install Flutter
-if (-not (Test-Path "$env:USERPROFILE\Development\flutter")) {
-    Write-Host "Installing Flutter, this will take time..."
-
-    $chromeAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"
-    Invoke-WebRequest -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.3-stable.zip" -OutFile "$env:TEMP\flutter.zip" -UserAgent $chromeAgent
-
-    Expand-Archive -Path "$env:TEMP\flutter.zip" -DestinationPath "$env:USERPROFILE\Development\flutter"
-    Remove-Item "$env:TEMP\flutter.zip"
+if (-not (Get-Command flutter -ErrorAction SilentlyContinue)) {
+    if (-not (Test-Path "$env:USERPROFILE\Development\flutter")) {
+        Write-Host "Installing Flutter, this will take time..."
+    
+        $chromeAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"
+        Invoke-WebRequest -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.3-stable.zip" -OutFile "$env:TEMP\flutter.zip" -UserAgent $chromeAgent
+    
+        Expand-Archive -Path "$env:TEMP\flutter.zip" -DestinationPath "$env:USERPROFILE\Development\flutter"
+        Remove-Item "$env:TEMP\flutter.zip"
+    }
+    else {
+        Write-Host "Flutter is already installed."
+    }
 }
 else {
     Write-Host "Flutter is already installed."
 }
 
 # Add Flutter to environment variable PATH
-$flutterPath = "$env:USERPROFILE\Development\flutter\bin"
-if ($env:Path -notmatch [regex]::Escape($chocoPath)) {
-    $env:Path += ";$flutterPath"
-    [System.Environment]::SetEnvironmentVariable("Path", $env:Path, [System.EnvironmentVariableTarget]::User)
+if (-not (Get-Command flutter -ErrorAction SilentlyContinue)) {
+    $flutterPath = "$env:USERPROFILE\Development\flutter\bin"
+    if ($env:Path -notmatch [regex]::Escape($flutterPath)) {
+        $env:Path += ";$flutterPath"
+        [System.Environment]::SetEnvironmentVariable("Path", $env:Path, [System.EnvironmentVariableTarget]::User)
 
-    Write-Host "Flutter added to environment variable PATH."
-    [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
+        Write-Host "Flutter added to environment variable PATH."
+        [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
+    }
+    else {
+        [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
+        Write-Host "Flutter already added to environment variable PATH."
+    }
 }
 else {
+    [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
     Write-Host "Flutter already added to environment variable PATH."
 }
 
