@@ -185,7 +185,7 @@ if [ -f "$ENV_FILE" ]; then
     mv "$ENV_FILE" "$influur_root_directory/influur-mobile"
     echo "File '$ENV_FILE' moved to '$influur_root_directory/influur-mobile'."
 
-    rm -f $ENV_FILE
+    rm -rf "$HOME/environmentTemp"
 else
     echo "The file '$ENV_FILE' doesn't exist."
     exit 1
