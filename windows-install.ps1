@@ -4,7 +4,7 @@ Write-Host "Starting installation for influur-mobile on Windows..."
 if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
     Write-Host "Installing Chocolatey..."
     Set-ExecutionPolicy Bypass -Scope Process -Force
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
     Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 }
 else {
@@ -13,22 +13,21 @@ else {
 
 # Add Chocolatey to environment variable PATH
 if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
-    $chocoPath = "$env:ALLUSERSPROFILE\chocolatey\bin"
-    if ($env:Path -notmatch [regex]::Escape($chocoPath)) {
-        $env:Path += ";$chocoPath"
-        [System.Environment]::SetEnvironmentVariable("Path", $env:Path, "Machine")
+    $chocoPath = "$($env:ProgramData)\chocolatey\bin"
+    $envPaths = $env:Path -split ";"
+
+    if (-not ($envPaths -contains $chocoPath)) {
+        [System.Environment]::SetEnvironmentVariable("Path", ($env:Path + ";$chocoPath"), [System.EnvironmentVariableTarget]::Machine)
     
-        Write-Host "Chocolatey added to environment variable PATH."
-        [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+        $env:Path += ";$chocoPath"
+        Write-Host "Chocolatey added to environment variable PATH.: " $env:Path
     }
     else {
-        [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-        Write-Host "Chocolatey already added to environment variable PATH."
+        Write-Host "Chocolatey is already added to environment variable with current PATH.: " $env:Path
     }
 }
 else {
-    [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-    Write-Host "Chocolatey already added to environment variable PATH."
+    Write-Host "Chocolatey already added to environment variable PATH.: " $env:Path
 }
 
 
@@ -42,17 +41,18 @@ else {
 }
 
 # Create necessary directories
-if (!(Test-Path -Path "$env:USERPROFILE\Development\influur")) {
+$influurPath = "$($env:USERPROFILE)\Development\influur"
+if (!(Test-Path -Path $influurPath)) {
     Write-Host "Create directory to clone repository."
-    New-Item -ItemType Directory -Path "$env:USERPROFILE\Development\influur"
+    New-Item -ItemType Directory -Path $influurPath
 }
 
 # Clone repository
-if (!(Test-Path -Path "$env:USERPROFILE\Development\influur\influur-mobile")) {
+if (!(Test-Path -Path "$influurPath\influur-mobile")) {
     Write-Host "Cloning influur-mobile repository..."
     Write-Host "Must type your passphrase to clone the repository..."
     
-    Set-Location  "$env:USERPROFILE\Development\influur"
+    Set-Location $influurPath
     git clone git@github.com:influur-corp/influur-mobile.git
 }
 else {
@@ -61,17 +61,18 @@ else {
 
 # Install Flutter
 if (-not (Get-Command flutter -ErrorAction SilentlyContinue)) {
-    if (-not (Test-Path "$env:USERPROFILE\Development\flutter")) {
+    $flutterPath = "$($env:USERPROFILE)\Development\flutter"
+    if (-not (Test-Path $flutterPath)) {
         Write-Host "Installing Flutter, this will take time..."
     
         $chromeAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0"
         Invoke-WebRequest -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.3-stable.zip" -OutFile "$env:TEMP\flutter.zip" -UserAgent $chromeAgent
     
-        Expand-Archive -Path "$env:TEMP\flutter.zip" -DestinationPath "$env:USERPROFILE\Development\flutter"
+        Expand-Archive -Path "$env:TEMP\flutter.zip" -DestinationPath $flutterPath
         Remove-Item "$env:TEMP\flutter.zip"
     }
     else {
-        Write-Host "Flutter is already installed."
+        Write-Host "Flutter is already installed in the current directory."
     }
 }
 else {
@@ -80,22 +81,21 @@ else {
 
 # Add Flutter to environment variable PATH
 if (-not (Get-Command flutter -ErrorAction SilentlyContinue)) {
-    $flutterPath = "$env:USERPROFILE\Development\flutter\bin"
-    if ($env:Path -notmatch [regex]::Escape($flutterPath)) {
-        $env:Path += ";$flutterPath"
-        [System.Environment]::SetEnvironmentVariable("Path", $env:Path, [System.EnvironmentVariableTarget]::User)
+    $flutterPath = "$($env:USERPROFILE)\Development\flutter\bin"
+    $envPaths = $env:Path -split ";"
 
-        Write-Host "Flutter added to environment variable PATH."
-        [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
+    if (-not ($envPaths -contains $flutterPath)) {
+        [System.Environment]::SetEnvironmentVariable("Path", ($env:Path + ";$flutterPath"), [System.EnvironmentVariableTarget]::User)
+
+        $env:Path += ";$flutterPath"
+        Write-Host "Flutter added to environment variable PATH.: " $env:Path
     }
     else {
-        [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
-        Write-Host "Flutter already added to environment variable PATH."
+        Write-Host "Flutter is already added to environment variable with current PATH.: " $env:Path
     }
 }
 else {
-    [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
-    Write-Host "Flutter already added to environment variable PATH."
+    Write-Host "Flutter already added to environment variable PATH.: " $env:Path
 }
 
 # Verify Flutter installation
@@ -140,24 +140,33 @@ else {
 
 # Install project dependencies
 Write-Host "Get project's dependencies."
-Set-Location "$env:USERPROFILE\Development\influur\influur-mobile"
+$influurRepoPath = "$($env:USERPROFILE)\Development\influur\influur-mobile"
+
+Set-Location $influurRepoPath
 flutter clean ; flutter pub get
 
 # Remove generated file and the .env file
-Remove-Item -Force ".env"
-Remove-Item -Force -Path "lib\services\environment_manager\environment_manager.g.dart"
+$envFile = "$($influurRepoPath)\.env"
+if (Test-Path -Path $envFile -PathType Leaf) {
+    Remove-Item -Force $envFile
+}
+
+$generatedFile = "$($influurRepoPath)\lib\services\environment_manager\environment_manager.g.dart"
+if (Test-Path -Path $generatedFile -PathType Leaf) {
+    Remove-Item -Force $generatedFile
+}
 
 # Configure .env file
-$ENV_FILE = "$env:USERPROFILE\environmentTemp\.env"
-$TARGET_PATH = "$env:USERPROFILE\Development\influur\influur-mobile"
-if (Test-Path -Path $ENV_FILE -PathType Leaf) {
-    Move-Item -Path $ENV_FILE -Destination $TARGET_PATH
-    Write-Host "File '$ENV_FILE' moved to $TARGET_PATH."
+$tempEnvFile = "$($env:USERPROFILE)\environmentTemp\.env"
+if (Test-Path -Path $tempEnvFile -PathType Leaf) {
+    Move-Item -Path $tempEnvFile -Destination $influurRepoPath
+    Write-Host "File '$tempEnvFile' moved to $influurRepoPath."
 
-    Remove-Item -Force $ENV_FILE
+    Remove-Item -Path "$($env:USERPROFILE)\environmentTemp" -Recurse
 }
 else {
-    Write-Host "The file '$ENV_FILE' doesn't exist."
+    Write-Host "The file '$tempEnvFile' doesn't exist."
+    exit 1
 }
 
 # Run build_runner commands
